@@ -285,3 +285,5 @@
          ((and (integerp identifier)
                (integerp with-respect-to))
           (- identifier with-respect-to))))
+
+(provide 'semver)
