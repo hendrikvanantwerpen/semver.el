@@ -53,3 +53,9 @@ Node semver accepts the following ranges:
     Join with space '>1.2.3 <2.0.0' means AND
     Join with || '1.2.3 || 1.3.4' means OR
     Couldn't find it, but I guess AND has higher precedence (it marks ends or ranges, while or gives different ranges). Mulitple OR-s makes sence, multiple AND's not (>1.2.3 >2.3.4 <3.4.5)
+
+Combining semver 1 + common extensions and semver 2 can be tricky. The
+case with the buildnumber (1.2.3-2) might be seen as a prerelease
+according to semver 2. Also sorting is a problem, because in semver 1
+the pre-release is sorted lexically, where in semver 2 it splits by dots
+and handles numbers as number.
