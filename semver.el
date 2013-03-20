@@ -2,23 +2,32 @@
 ;
 ; See http://semver.org/ for the specification.
 
-(defvar semver--regexp
-  (let* ((g< "\\(")
-         (g<? "\\(?:")
-         (>g "\\)")
-         (dot "\\.")
-         (num "[[:digit:]]+")
-         (alnum "[[:alnum:]-]+")
-         (alnums (concat g<? alnum g<? dot alnum >g "*" >g )))
-    (concat "^" g< num dot num dot num >g
-            g<? "-" g< alnums >g >g "?"
-            g<? "+" g< alnums >g >g "?" "$")))
+(let* ((g< "\\(")
+       (g<? "\\(?:")
+       (>g "\\)")
+       (dot "\\.")
+       (o "\\|")
+       (al "[[:alpha:]]")
+       (al. "[[:alpha:]\\.]")
+       (al+ "[[:alpha:]]+")
+       (num+ "[[:digit:]]+")
+       (num* "[[:digit:]]*")
+       (alnum* "[[:alnum:]]*")
+       (alnumd+ "[[:alnum:]-\\.]+")
+       (alnumd* "[[:alnum:]-\\.]*")
+       (num*al+numd* (concat g<? num* al. alnumd* >g)))
+  (setq semver--re
+    (concat "^" g< num+ dot num+ dot num+ >g
+            g<? "-" g< num+ >g >g "?"
+            g<? g< al alnumd* >g o
+                g<? "-" g< num*al+numd* >g >g
+            >g "?" "$")))
 
-(defun semver-create (version &optional prerelease build)
+(defun semver-create (version &optional build prerelease)
   (list 'semver
-        (semver--component-parse-int version)
-        (semver--component-parse prerelease)
-        (semver--component-parse build)))
+        (semver--version-parse version)
+        prerelease
+        (semver--int-parse build)))
 
 (defun semver-p (object)
   (and (listp object)
@@ -27,63 +36,49 @@
 (defun semver-parse (string-or-semver)
   (if (semver-p string-or-semver)
       string-or-semver
-    (when (string-match semver--regexp
+    (when (string-match semver--re
                         string-or-semver)
       (let ((version
              (match-string 1 string-or-semver))
-            (prerelease
-             (match-string 2 string-or-semver))
             (build
-             (match-string 3 string-or-semver)))
+             (match-string 2 string-or-semver))
+            (prerelease
+             (or (match-string 3 string-or-semver)
+                 (match-string 4 string-or-semver))))
         (semver-create version
-                       prerelease
-                       build)))))
+                       build
+                       prerelease)))))
 
-(defun semver--component-parse (string-or-list)
-  (mapcar 'semver--identifier-parse
+(defun semver--version-parse (string-or-list)
+  (mapcar 'semver--int-parse
           (if (stringp string-or-list)
               (split-string string-or-list "\\.")
             string-or-list)))
 
-(defun semver--component-parse-int (string-or-list)
-  (mapcar 'semver--identifier-parse-int
-          (if (stringp string-or-list)
-              (split-string string-or-list "\\.")
-            string-or-list)))
-
-(defun semver--identifier-parse-int (string-or-int)
-  (if (integerp string-or-int)
-      string-or-int
-    (string-to-number string-or-int)))
-
-(defun semver--identifier-parse (string-or-int)
-  (if (integerp string-or-int)
-      string-or-int
-    (if (string-match "^[[:digit:]]+$" string-or-int)
-        (string-to-number string-or-int)
-      string-or-int)))
+(defun semver--int-parse (string-or-int)
+  (when string-or-int
+    (if (integerp string-or-int)
+        string-or-int
+      (string-to-number string-or-int))))
 
 (defun semver-format (semver)
   (setq semver (semver-parse semver))
   (let ((version (semver-version semver))
-        (prerelease (semver-prerelease semver))
-        (build (semver-build semver)))
-    (concat (semver--component-format version)
-            (semver--component-format prerelease "-")
-            (semver--component-format build "+"))))
+        (build (semver-build semver))
+        (prerelease (semver-prerelease semver)))
+    (concat (semver--version-format version)
+            (if build
+              (concat "-" (number-to-string build))
+              "")
+            (if prerelease
+              (concat "-" prerelease)
+              ""))))
 
-(defun semver--component-format (component
-                                &optional prefix)
-  (concat (if component prefix "")
-          (mapconcat 'identity
-                     (mapcar 'semver--identifier-format
-                             component) ".")))
+(defun semver--version-format (version)
+  (mapconcat 'identity
+             (mapcar 'semver--int-format
+                     version) "."))
   
-(defun semver--identifier-format (id)
-  (if (integerp id)
-      (format "%d" id)
-    id))
-
 (defun semver-version (semver)
   (setq semver (semver-parse semver))
   (nth 1 semver))
@@ -95,7 +90,7 @@
 (defun semver-set-major (major semver)
   (setq semver (semver-parse semver))
   (setcar (nthcdr 0 (semver-version semver))
-          (semver--identifier-parse-int major))
+          (semver--int-parse major))
   semver)
 
 (defun semver-with-major (major semver)
@@ -103,8 +98,8 @@
   (semver-create (list major
                        (semver-minor semver)
                        (semver-patch semver))
-                 (semver-prerelease semver)
-                 (semver-build semver)))
+                 (semver-build semver)
+                 (semver-prerelease semver)))
 
 (defun semver-inc-major (semver)
   (setq semver (semver-parse semver))
@@ -119,7 +114,7 @@
 (defun semver-set-minor (minor semver)
   (setq semver (semver-parse semver))
   (setcar (nthcdr 1 (semver-version semver))
-          (semver--identifier-parse-int minor))
+          (semver--int-parse minor))
   semver)
 
 (defun semver-with-minor (minor semver)
@@ -127,8 +122,8 @@
   (semver-create (list (semver-major semver)
                        minor
                        (semver-patch semver))
-                 (semver-prerelease semver)
-                 (semver-build semver)))
+                 (semver-build semver)
+                 (semver-prerelease semver)))
 
 (defun semver-inc-minor (semver)
   (setq semver (semver-parse semver))
@@ -142,7 +137,7 @@
 (defun semver-set-patch (patch semver)
   (setq semver (semver-parse semver))
   (setcar (nthcdr 2 (semver-version semver))
-          (semver--identifier-parse-int patch))
+          (semver--int-parse patch))
   semver)
 
 (defun semver-with-patch (patch semver)
@@ -150,8 +145,8 @@
   (semver-create (list (semver-major semver)
                        (semver-minor semver)
                        patch)
-                 (semver-prerelease semver)
-                 (semver-build semver)))
+                 (semver-build semver)
+                 (semver-prerelease semver)))
 
 (defun semver-inc-patch (semver)
   (setq semver (semver-parse semver))
@@ -164,13 +159,12 @@
 (defun semver-with-prerelease (prerelease semver)
   (setq semver (semver-parse semver))
   (semver-create (semver-version semver)
-                 prerelease
-                 (semver-build semver)))
+                 (semver-build semver)
+                 prerelease))
 
 (defun semver-set-prerelease (prerelease semver)
   (setq semver (semver-parse semver))
-  (setcar (nthcdr 2 semver)
-          (semver--component-parse prerelease))
+  (setcar (nthcdr 2 semver) prerelease)
   semver)
 
 (defun semver-build (semver)
@@ -180,13 +174,13 @@
 (defun semver-with-build (build semver)
   (setq semver (semver-parse semver))
   (semver-create (semver-version semver)
-                 (semver-prerelease semver)
-                 build))
+                 build
+                 (semver-prerelease semver)))
 
 (defun semver-set-build (build semver)
   (setq semver (semver-parse semver))
   (setcar (nthcdr 3 semver)
-          (semver--component-parse build))
+          (semver--int-parse build))
   semver)
 
 (defun semver-initial-p (semver)
@@ -210,80 +204,67 @@
 (defun semver--compare (semver with-respect-to)
   (let ((res 0))
     (setq res 
-          (semver--compare-components
+          (semver--compare-version
            (semver-version semver)
            (semver-version with-respect-to)))
     (if (zerop res)
         (setq res
-              (semver--component-over-nil
+              (semver--better-not-nil
+               (semver-build semver)
+               (semver-build with-respect-to))))
+    (if (and (zerop res)
+             (semver-build semver)
+             (semver-build with-respect-to))
+        (setq res
+              (- (semver-build semver)
+                 (semver-build with-respect-to))))
+    (if (zerop res)
+        (setq res
+              (semver--better-not-nil
                (semver-prerelease with-respect-to)
                (semver-prerelease semver))))
-    (if (zerop res)
+    (if (and (zerop res)
+             (semver-prerelease semver)
+             (semver-prerelease with-respect-to))
         (setq res
-              (semver--compare-components
-               (semver-prerelease semver)
-               (semver-prerelease with-respect-to))))
-    (if (zerop res)
-        (setq res
-              (semver--component-over-nil
-               (semver-build semver)
-               (semver-build with-respect-to))))
-    (if (zerop res)
-        (setq res
-              (semver--compare-components
-               (semver-build semver)
-               (semver-build with-respect-to))))
+              (let ((tmp
+                     (compare-strings
+                      (semver-prerelease semver)
+                      nil nil
+                      (semver-prerelease with-respect-to)
+                      nil nil)))
+                (if (equal tmp t)
+                    0
+                  tmp))))
     res))
 
-(defun semver--component-over-nil (component
-                                   with-respect-to)
-  (cond ((and (not component)
+(defun semver--better-not-nil (object
+                               with-respect-to)
+  (cond ((and (not object)
               with-respect-to)
          -1)
-        ((and component
+        ((and object
               (not with-respect-to))
          1)
         (t 0)))
   
-(defun semver--compare-components (component
-                                  with-respect-to)
+(defun semver--compare-version (version
+                                with-respect-to)
   (let ((res 0))
-    (while (and (or component with-respect-to)
+    (while (and (or version with-respect-to)
                 (zerop res))
       (setq res
-            (cond ((and component with-respect-to)
-                   (semver--compare-identifiers
-                    (car component)
-                    (car with-respect-to)))
-                  ((and component
+            (cond ((and version with-respect-to)
+                   (- (car version)
+                      (car with-respect-to)))
+                  ((and version
                         (not with-respect-to))
                    1)
-                  ((and (not component)
+                  ((and (not version)
                         with-respect-to)
                    -1)))
-      (setq component (cdr component))
+      (setq version (cdr version))
       (setq with-respect-to (cdr with-respect-to)))
     res))
-
-(defun semver--compare-identifiers (identifier
-                                   with-respect-to)
-  (cond ((and (stringp identifier)
-              (stringp with-respect-to))
-         (let ((res (compare-strings identifier
-                                     nil nil
-                                     with-respect-to
-                                     nil nil)))
-           (if (equal res t)
-               0
-             res)))
-         ((and (stringp identifier)
-               (integerp with-respect-to))
-          1)
-         ((and (integerp identifier)
-               (stringp with-respect-to))
-          -1)
-         ((and (integerp identifier)
-               (integerp with-respect-to))
-          (- identifier with-respect-to))))
 
 (provide 'semver)
