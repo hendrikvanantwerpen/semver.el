@@ -1,61 +1,45 @@
 semver
 ======
 
-Implementation of semantic versioning in elisp. See http://semver.org/
-for details.
+Implementation of semver 1 plus some common extensions for elisp. See http://semver.org/ for details.
 
 It has functions to parse, format and manipulate version in semver format. All public functions can take either a string or a parsed instance. All functions return a parsed instance, except semver-format which returns a string representation. Example usage:
 
     (semver-format (semver-inc-minor "1.2.4")) ; "1.3.0"
 
-Notes
------
+Version formats
+---------------
 
-It seems version 1.0.0 of semver doesn't have build numbers and indicates pre-release with a dash and alnums (1.2.3-pre1).
+Versions with the following formats are accepted:
 
-Formats used for a version in js:
+    1.2.3
+    1.2.3-4 ; 4 is the build
+    1.2.3-beta ; beta is the pre-release
 
-    v1.2.3
+If the part following the first dash is a number (digits only) it is interpreted as a build number. In all other cases are considered as pre-release. This includes the '1.0' in 1.2.3-1.0 for example.
 
-Formats used for dependency version in js:
+Predicate formats
+-----------------
 
-    *
-    2
-    1.x
-    0.1.x
-    1.0.2-1.2.3 ; this is a full version, not a range!
-    ~1.2
-    >=0.6
-    ~1.2.3
-    = 1.2.3
-    = 0.1.2-1
-    ~0.6.0-1
-    ~0.2.2rc
-    >=0.5.x
-    1.8.1-3
+There are quite a few predicate notations out there. This library tries to be compatible with the node-semver package. Accepted formats are:
 
-    1.2.3-7-beta (build and tag reversed)
+    1.2.3      ; a literal version
+    =1.2.3     ; idem
+    >=1.2.3    ; every version bigger in any part than this is accepted.
+    >1.2.3     ; 1.2.3 doesn't match, but 1.2.3-1 does, or 1.2.4
+    ~1.2.3     ; allows for increases in the patch component.
+               ; NB. also matches any 1.2.3-prerelease (this behaviour is copied from node-semver)
+    ~1.2       ; equal to ~1.2.0
+    ~1         ; this is equal to 1 and does allow variation in minor as well.
+    1 - 2      ; accepts any version from the lowest accepted version of the first part
+               ; until the highest accepted version of the second part
+    1.3 - 1.4  ; E.g. anything >= 1.3 and <= 1.5 will match.
+    1.x, 1.x.x ; same as '1'
+    1.2.x      ; same as 1.2
+    1.2 || 2.1 ; any of the above separated by || indicate one of them
 
-    Operators: * (all version, goes alone), ~ (allow higher patches), >=, =
-    Version formats: 1, 1.0, 1.0.3, 1.x, 1.2.x, 1.2.3-2 (build!) 0.2.2rc (tag attached) 2.0.2-7-beta
+Notes in semver 2
+-----------------
 
-Node semver accepts the following ranges:
+Combining semver 1 + common extensions and semver 2 can be tricky. The case with the buildnumber (1.2.3-2) might be seen as a prerelease according to semver 2. Also sorting is a problem, because in semver 1 the pre-release is sorted lexically, where in semver 2 it splits by dots and handles digit only identifiers as number.
 
-    >1.2.3
-    >=1.2.3
-    <1.2.3
-    <=2.3.4
-    1.2.3 - 2.3.4 := >=1.2.3 <=2.3.4
-    ~1.2 := >= 1.2.0 <1.3.0
-    ~1 := >=1.0.0 <2.0.0
-    1.2.x := >=1.2.0 <1.3.0
-    1.x := >=1.0.0 <2.0.0
-    Join with space '>1.2.3 <2.0.0' means AND
-    Join with || '1.2.3 || 1.3.4' means OR
-    Couldn't find it, but I guess AND has higher precedence (it marks ends or ranges, while or gives different ranges). Mulitple OR-s makes sence, multiple AND's not (>1.2.3 >2.3.4 <3.4.5)
-
-Combining semver 1 + common extensions and semver 2 can be tricky. The
-case with the buildnumber (1.2.3-2) might be seen as a prerelease
-according to semver 2. Also sorting is a problem, because in semver 1
-the pre-release is sorted lexically, where in semver 2 it splits by dots
-and handles numbers as number.
