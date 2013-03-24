@@ -7,6 +7,8 @@ It has functions to parse, format and manipulate version in semver format. All p
 
     (semver-format (semver-inc-minor "1.2.4")) ; "1.3.0"
 
+Depends on 's.
+
 Version formats
 ---------------
 
