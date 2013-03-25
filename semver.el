@@ -191,15 +191,20 @@
 
 ;;; Comparisons
 
+(defun semver= (semver with-respect-to)
+  (setq semver (semver-parse semver))
+  (setq with-respect-to (semver-parse with-respect-to))
+  (= (semver-compare semver with-respect-to) 0))
+
 (defun semver< (semver with-respect-to)
   (setq semver (semver-parse semver))
   (setq with-respect-to (semver-parse with-respect-to))
-  (< (semver--compare semver with-respect-to) 0))
+  (< (semver-compare semver with-respect-to) 0))
         
 (defun semver>= (semver with-respect-to)
   (not (semver< semver with-respect-to)))
 
-(defun semver--compare (semver with-respect-to)
+(defun semver-compare (semver with-respect-to)
   (let ((res 0))
     (if (zerop res)
         (setq res
@@ -346,7 +351,7 @@
               (semver--pred-satisfied (nth 2 pred) semver)))
         (t
          (funcall (nth 0 pred)
-                  (semver--compare semver (nth 1 pred))
+                  (semver-compare semver (nth 1 pred))
                   0))))
 
 (defun semver--range-parse (string)
