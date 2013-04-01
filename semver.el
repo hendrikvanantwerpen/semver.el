@@ -1,6 +1,26 @@
-; semver.el Semantic versioning 1 implementation in elisp
-;
-; See http://semver.org/ for the specification.
+;;; semver.el --- Emacs Semantic Versioning 1 Library
+
+;; Copyright 2013 Hendrik van Antwerpen
+
+;; Author: Hendrik van Antwerpen <hendrik@van-antwerpen.net>
+;; Version: 0.2.0
+;; Package-Requires: ((s "1.3.1"))
+
+;; This file is not part of GNU Emacs.
+
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; 
+;;     http://www.apache.org/licenses/LICENSE-2.0
+;; 
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+
+;;; Code:
 
 (require 's)
 
@@ -42,7 +62,7 @@
         (concat "^" ws* g< "" o "=" o ">" o ">=" o "<=" o "<" o "~" >g
                 ws* g< g<? alnumd+ o "\\*" >g >g ws* "$")))
 
-;;; Parse, create and format semvers
+;; Parse, create and format semvers
 
 (defun semver-create (major minor patch &optional build prerelease)
   "Create a new semver."
@@ -111,7 +131,7 @@
              (mapcar 'number-to-string
                      version) "."))
   
-;;; Access version, major, minor, patch, build and prerelease
+;; Access version, major, minor, patch, build and prerelease
 
 (defun semver-version (semver)
   (setq semver (semver-parse semver))
@@ -189,7 +209,7 @@
   (setq semver (semver-parse semver))
   (>= (semver-major semver) 1))
 
-;;; Comparisons
+;; Comparisons
 
 (defun semver= (semver with-respect-to)
   (setq semver (semver-parse semver))
@@ -263,7 +283,7 @@
              (funcall deep-compare object with-respect-to)
            0))))
 
-;;; Predicates
+;; Predicates
 
 (defun semver-pred-parse (string)
   (if (semver-pred-p string)
@@ -379,3 +399,5 @@
   (semver--pred-satisfied (nth 1 pred) semver))
 
 (provide 'semver)
+
+;;; s.el ends here
