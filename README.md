@@ -1,11 +1,7 @@
 semver
 ======
 
-Implementation of semver 1 plus some common extensions for elisp. See http://semver.org/ for details.
-
-It has functions to parse, format and manipulate version in semver format. All public functions can take either a string or a parsed instance. All functions return a parsed instance, except semver-format which returns a string representation. Example usage:
-
-    (semver-format (semver-inc-minor "1.2.4")) ; "1.3.0"
+A Semantic Versioning library for Emacs. It provides functions to parse, format, manipulate and compare semantic version. It implements version 1 of the semantic versioning plus some common extensions that are found in the wild. See http://semver.org/ for details. All public functions can take either a string or a parsed instance.
 
 Version formats
 ---------------
@@ -16,7 +12,7 @@ Versions with the following formats are accepted:
     1.2.3-4 ; 4 is the build
     1.2.3-beta ; beta is the pre-release
 
-If the part following the first dash is a number (digits only) it is interpreted as a build number. In all other cases are considered as pre-release. This includes the '1.0' in 1.2.3-1.0 for example.
+If the part following the first dash is a number (digits only) it is interpreted as a build number. All other cases are considered as pre-release. This includes the '1.0' in 1.2.3-1.0 for example.
 
 Predicate formats
 -----------------
@@ -42,6 +38,20 @@ Notes in semver 2
 -----------------
 
 Combining semver 1 + common extensions and semver 2 can be tricky. The case with the buildnumber (1.2.3-2) might be seen as a prerelease according to semver 2. Also sorting is a problem, because in semver 1 the pre-release is sorted lexically, where in semver 2 it splits by dots and handles digit only identifiers as number.
+
+Install
+-------
+
+Manually: put semver.el file in your load-path and (require 'semver).
+
+El-get: Evaluate the following snippet and install with el-get-install.
+
+   (setq el-get-sources
+    (cons '(:name semver
+            :type github
+            :pkgname "hendrikvanantwerpen/semver.el"
+            :depends (s))
+          el-get-sources))
 
 License
 -------
