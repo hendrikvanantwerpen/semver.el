@@ -46,12 +46,12 @@ Manually: put semver.el file in your load-path and (require 'semver).
 
 El-get: Evaluate the following snippet and install with el-get-install.
 
-   (setq el-get-sources
-    (cons '(:name semver
-            :type github
-            :pkgname "hendrikvanantwerpen/semver.el"
-            :depends (s))
-          el-get-sources))
+    (setq el-get-sources
+     (cons '(:name semver
+             :type github
+             :pkgname "hendrikvanantwerpen/semver.el"
+             :depends (s))
+           el-get-sources))
 
 License
 -------
