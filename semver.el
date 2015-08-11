@@ -5,15 +5,16 @@
 ;; Author: Hendrik van Antwerpen <hendrik@van-antwerpen.net>
 ;; Version: 0.2.0
 ;; Package-Requires: ((s "1.3.1"))
+;; Source: https://github.com/hendrikvanantwerpen/semver.el
 
 ;; This file is not part of GNU Emacs.
 
 ;; Licensed under the Apache License, Version 2.0 (the "License");
 ;; you may not use this file except in compliance with the License.
 ;; You may obtain a copy of the License at
-;; 
+;;
 ;;     http://www.apache.org/licenses/LICENSE-2.0
-;; 
+;;
 ;; Unless required by applicable law or agreed to in writing, software
 ;; distributed under the License is distributed on an "AS IS" BASIS,
 ;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +23,8 @@
 
 ;;; Code:
 
+; To install "The long lost Emacs string manipulation library" s package,
+; use el-get (see above) or download s.el from https://github.com/magnars/s.el
 (require 's)
 
 (let* ((g< "\\(")
@@ -130,7 +133,7 @@
   (mapconcat 'identity
              (mapcar 'number-to-string
                      version) "."))
-  
+
 ;; Access version, major, minor, patch, build and prerelease
 
 (defun semver-version (semver)
@@ -220,7 +223,7 @@
   (setq semver (semver-parse semver))
   (setq with-respect-to (semver-parse with-respect-to))
   (< (semver-compare semver with-respect-to) 0))
-        
+
 (defun semver>= (semver with-respect-to)
   (not (semver< semver with-respect-to)))
 
@@ -356,7 +359,7 @@
                        (list '<= end))))
               (t
                (error "Unknown comparator")))))))
-    
+
 (defun semver--pred-satisfied (pred semver)
   (cond ((eq '| (nth 0 pred))
          (let ((result nil))
@@ -400,4 +403,4 @@
 
 (provide 'semver)
 
-;;; s.el ends here
+;;; semver.el ends here
