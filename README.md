@@ -42,9 +42,12 @@ Combining semver 1 + common extensions and semver 2 can be tricky. The case with
 Install
 -------
 
-Manually: put semver.el file in your load-path and (require 'semver).
+Manually:
 
-El-get: Evaluate the following snippet and install with el-get-install.
+1. If you do not have `s.el`, use the Emacs package manager or download it manually from [magnars/s.el](https://github.com/magnars/s.el) and install it in your `load-path`.
+1. Put `semver.el` in your `load-path` and `(require 'semver)`.
+
+`el-get`: Evaluate the following snippet and install with `el-get-install`.
 
     (setq el-get-sources
      (cons '(:name semver
